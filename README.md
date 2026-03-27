@@ -1,3 +1,5 @@
+[![DOI](https://zenodo.org/badge/1193578309.svg)](https://doi.org/10.5281/zenodo.19254106)
+
 # information-engine
 Code and analytical solutions for the optimal control of a mesoscopic information engine. Evaluates finite-time transport of an overdamped particle in an optical trap under costly measurement via a POMDP framework. Maps exact thermodynamic boundaries for discrete and continuous-measurement Maxwell demons.
 

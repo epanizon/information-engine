@@ -227,4 +227,4 @@ ax2.grid(True, color='lightgray', alpha=0.5, linewidth=0.5)
 
 plt.tight_layout()
 plt.savefig('./Fig3.pdf', dpi=600, bbox_inches='tight')
-plt.show()
+#plt.show()

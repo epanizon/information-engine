@@ -137,7 +137,7 @@ ax[0].plot(v_vals[valid_idx], c_crit_curve[valid_idx], color='white', linewidth=
 
 cbar0 = plt.colorbar(mesh0, ax=ax[0])
 cbar0.set_label(r'Precision Effort ($\dot{\Sigma}_{meas} / \Sigma^2$) [Log]')
-cbar0.ax.yaxis.set_label_coords(4.0, 0.5)
+cbar0.ax.yaxis.set_label_coords(6.0, 0.5)
 
 ax[0].set_title('Continuous Precision Effort')
 ax[0].set_ylabel('Cost Scalar ($c$)')
@@ -152,7 +152,7 @@ ax[1].plot(v_vals[valid_idx], c_crit_curve[valid_idx], color='white', linewidth=
 
 cbar1 = plt.colorbar(mesh1, ax=ax[1], extend='max') 
 cbar1.set_label(r'Power Ratio ($\mathcal{P}_{fluct} / \mathcal{P}_{drag}$)')
-cbar1.ax.yaxis.set_label_coords(4.0, 0.5)
+cbar1.ax.yaxis.set_label_coords(6.0, 0.5)
 
 ax[1].set_title('Thermodynamic Viability Ratio')
 ax[1].set_xlabel('Macroscopic Velocity ($v$)')

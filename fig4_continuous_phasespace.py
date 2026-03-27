@@ -5,7 +5,7 @@ from scipy.optimize import minimize_scalar
 import matplotlib as mpl
 
 # ==========================================
-# 0. Formatting (PRE Column Format)
+# 0. Formatting
 # ==========================================
 mpl.rcParams.update({
     'font.family': 'sans-serif',
@@ -72,7 +72,7 @@ for i, c in enumerate(c_vals):
 Net_Profit_1D = P_fluct_1D - C_rate_1D
 
 # ==========================================
-# 4. Apply the Strict Profitability Constraint
+# 4. Apply the Profitability Constraint
 # ==========================================
 P_drag_grid = gamma * V_grid**2
 
@@ -112,7 +112,7 @@ c_crit_curve = np.zeros_like(v_vals)
 c_crit_curve[valid_idx] = c_crit_limit * (s_star[valid_idx]**3) / (2 - s_star[valid_idx])
 
 # ==========================================
-# 6. Plotting the Side-by-Side Heatmaps
+# 6. Plotting the Heatmaps
 # ==========================================
 fig, ax = plt.subplots(2, 1, figsize=(3.375, 4.5), sharex=True)
 
@@ -167,4 +167,4 @@ for a in ax:
 
 plt.tight_layout()
 plt.savefig('./Fig4.pdf', dpi=600, bbox_inches='tight')
-plt.show()
+#plt.show()

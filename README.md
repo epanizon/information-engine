@@ -11,10 +11,7 @@ The code evaluates the finite-time control problem of driving an overdamped part
 The scripts are written in standard Python 3 and require the following packages:
 * `numpy` (Numerical arrays and stochastic sampling)
 * `scipy` (Specifically `scipy.optimize` for exact steady-state limits)
-* `matplotlib` (Strictly formatted for Physical Review E single-column specifications)
-
-To install the dependencies, run:
-`pip install -r requirements.txt`
+* `matplotlib` 
 
 ## Repository Structure
 

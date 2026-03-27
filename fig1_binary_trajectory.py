@@ -200,4 +200,4 @@ if len(blind_idx) > 0:
 
 plt.tight_layout()
 plt.savefig('./Fig1.pdf', dpi=600, bbox_inches='tight')
-plt.show()
+#plt.show()

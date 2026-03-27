@@ -128,4 +128,4 @@ for a in ax:
 
 plt.tight_layout()
 plt.savefig('./Fig2.pdf', dpi=600, bbox_inches='tight')
-plt.show()
+#plt.show()

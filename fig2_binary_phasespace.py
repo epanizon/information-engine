@@ -4,7 +4,7 @@ import matplotlib as mpl
 from matplotlib.colors import LogNorm
 
 # ==========================================
-# 1. PRE Column Formatting
+# 1. Formatting
 # ==========================================
 mpl.rcParams.update({
     'font.family': 'sans-serif',
@@ -34,7 +34,7 @@ C_vals = np.linspace(0, C_max * 1.05, 300)
 
 V_grid, C_grid = np.meshgrid(v_vals, C_vals)
 
-# Exact Analytical Envelope C_env(v)
+# Analytical Envelope C_env(v)
 v_safe = np.clip(v_vals, 1e-10, None)
 v_ratio_sq = (v_safe / v_max)**2
 C_env_analytical = C_max * (1 - v_ratio_sq + v_ratio_sq * np.log(v_ratio_sq))
@@ -63,7 +63,7 @@ for i, C in enumerate(C_vals):
             Freq_1D[i] = 1.0 / t_p_array[best_idx]
 
 # ==========================================
-# 4. Strict Profitability Constraint
+# 4. Profitability Constraint
 # ==========================================
 P_drag_grid = gamma * V_grid**2
 P_max_2D = P_max_1D[:, np.newaxis]

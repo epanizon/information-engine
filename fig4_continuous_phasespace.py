@@ -140,7 +140,7 @@ cbar0.set_label(r'Precision Effort ($\dot{\Sigma}_{meas} / \Sigma^2$) [Log]')
 cbar0.ax.yaxis.set_label_coords(6.0, 0.5)
 
 ax[0].set_title('Continuous Precision Effort')
-ax[0].set_ylabel('Cost Scalar ($c$)')
+ax[0].set_ylabel('Cost Coefficient ($c$)')
 ax[0].text(0.05, c_crit_limit * 0.05, 'Active Engine', color='black', fontweight='bold')
 ax[0].text(v_max_theoretical * 0.55, c_crit_limit * 0.5, 'Bankrupt', color='white', fontweight='bold')
 
@@ -156,7 +156,7 @@ cbar1.ax.yaxis.set_label_coords(6.0, 0.5)
 
 ax[1].set_title('Thermodynamic Viability Ratio')
 ax[1].set_xlabel('Macroscopic Velocity ($v$)')
-ax[1].set_ylabel('Cost Scalar ($c$)')
+ax[1].set_ylabel('Cost Coefficient ($c$)')
 
 ax[1].text(0.05, c_crit_limit * 0.05, r'Ratio $\gg 1$', color='black', fontweight='bold')
 ax[1].text(v_max_theoretical * 0.55, c_crit_limit * 0.5, r'Ratio $< 1$', color='white', fontweight='bold')

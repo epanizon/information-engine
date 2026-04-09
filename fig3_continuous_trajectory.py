@@ -13,10 +13,10 @@ np.random.seed(42)
 mpl.rcParams.update({
     'font.family': 'sans-serif',
     'font.size': 9,             
-    'axes.titlesize': 10,       
-    'axes.labelsize': 10,       
-    'xtick.labelsize': 8,      
-    'ytick.labelsize': 8,      
+    'axes.titlesize': 10,        
+    'axes.labelsize': 10,        
+    'xtick.labelsize': 8,       
+    'ytick.labelsize': 8,       
     'legend.fontsize': 7,
     'lines.linewidth': 1.0,
     'figure.titlesize': 10
@@ -25,6 +25,7 @@ mpl.rcParams.update({
 # Physical Parameters
 kBT, kappa, gamma, dt, t_f = 1.0, 1.0, 1.0, 0.01, 20.0
 alpha = np.exp(-kappa * dt / gamma)
+alpha_bar = 1.0 - alpha
 Sigma_eq = (kBT / kappa) * (1 - alpha**2)
 Sigma_max = kBT / kappa  
 N_total = int(t_f / dt)
@@ -55,64 +56,70 @@ print(f"Analytical Greedy Asymptote: {greedy_steady_state_target:.4f}")
 print(f"Exact DP Asymptote:          {true_steady_state_target:.4f}\n")
 
 # ==========================================
-# 2. Exact DP Riccati & Steering Setup
+# 2. Backward Induction: Precompute Policy
 # ==========================================
-P = np.zeros(N_total + 1)
-K = np.zeros(N_total + 1)
-s = np.zeros(N_total + 1)  
-v = np.zeros(N_total + 1)  
+P = 0.0  # Base case for the final step target
+A_n = np.zeros(N_total + 1)
+K_seq = np.zeros(N_total + 1)      # Feedback gains for the control law
 
-P[0] = 0.0
-s[0] = -kappa * lam_f  
-
+# The 1D Riccati Recurrence
 for n in range(1, N_total + 1):
-    Gamma = (1 - alpha) * (P[n-1] * alpha - kappa)
-    Omega = (1 - alpha) * (P[n-1] * (1 - alpha) + 2 * kappa)
+    # Calculate intermediate terms
+    B = alpha_bar * (P * alpha - kappa)
+    A = alpha_bar * (P * alpha_bar + 2 * kappa)
     
-    P[n] = P[n-1] * alpha**2 - (Gamma**2 / Omega)
-    K[n] = -Gamma / Omega
+    # The optimal control gain
+    K_seq[n] = -B / A
     
-    v[n] = -s[n-1] * (1 - alpha) / Omega
-    s[n] = s[n-1] * (alpha + (1 - alpha) * K[n])
+    # Update the variance penalty
+    P_next = P * alpha**2 - (B**2) / A
+    
+    P = P_next
+    A_n[n] = -0.5 * P
 
 # ==========================================
 # 3. DP Continuous-State Value Function
 # ==========================================
-A_n = np.zeros(N_total + 1)
-A_n[1:] = -P[1:] / 2.0
-
-greedy_sigma_opt = np.zeros(N_total + 1)
-greedy_sigma_opt[1:] = np.sqrt(c_coeff / A_n[1:])
-greedy_sigma_opt[0] = np.inf 
-greedy_target_forward = np.array([greedy_sigma_opt[N_total - t] for t in range(N_total)])
-
-sigma_grid = np.linspace(1e-5, Sigma_max * 3.0, 5000)
-g = np.zeros_like(sigma_grid)
 true_sigma_opt = np.zeros(N_total + 1)
 true_sigma_opt[0] = np.inf
 
 print("Solving DP Continuous-State Value Function backward in time...")
+
+# Store the value functions recursively
+g_funcs = []
+g_funcs.append(lambda sigma: 0.0)  # Base case: deadline cost is 0
+
+# Factory function to properly scope the backward recursion
+def build_continuous_step(A_val, g_prev):
+    
+    # The objective is to minimize g
+    def g_target(S):
+        # (A * S^+ + c/S^+ - g_evolved(S^+) 
+        return A_val * S + (c_coeff / S) - g_prev(alpha**2 * S + Sigma_eq)
+        
+    # Search for the optimal target variance continuously 
+    res = minimize_scalar(g_target, bounds=(1e-6, Sigma_max * 5.0), method='bounded')
+    target_sigma = res.x
+    
+    # Pre-evaluate the evolved function at the target to optimize the closure execution
+    g_evolved_at_target = g_prev(alpha**2 * target_sigma + Sigma_eq)
+    
+    # The piecewise value function for the prior state
+    def g_current(sigma):
+        if sigma <= target_sigma:
+            # Below target: measurement is not profitable, state diffuses naturally
+            return g_prev(alpha**2 * sigma + Sigma_eq)
+        else:
+            # Above target: system applies precise continuous measurement down to target
+            return A_val * (sigma - target_sigma) - c_coeff * (1.0/target_sigma - 1.0/sigma) + g_evolved_at_target
+            
+    return target_sigma, g_current
+
+# Execute DP
 for n in range(1, N_total + 1):
-    sig_evolved = alpha**2 * sigma_grid + Sigma_eq
-    g_evolved = np.interp(sig_evolved, sigma_grid, g)
-    
-    V_target = -A_n[n] * sigma_grid - c_coeff / sigma_grid + g_evolved
-    
-    target_idx = np.argmax(V_target)
-    target_sigma = sigma_grid[target_idx]
-    true_sigma_opt[n] = target_sigma
-    
-    g_new = np.zeros_like(g)
-    
-    mask_off = sigma_grid <= target_sigma
-    g_new[mask_off] = g_evolved[mask_off]
-    
-    mask_on = ~mask_off
-    g_new[mask_on] = A_n[n] * (sigma_grid[mask_on] - target_sigma) \
-                     - c_coeff * (1/target_sigma - 1/sigma_grid[mask_on]) \
-                     + g_evolved[target_idx]
-                     
-    g = g_new
+    target, g_new = build_continuous_step(A_n[n], g_funcs[n-1])
+    true_sigma_opt[n] = target
+    g_funcs.append(g_new)
 
 true_target_forward = np.array([true_sigma_opt[N_total - t] for t in range(N_total)])
 
@@ -123,7 +130,7 @@ x, mu_minus, mu_plus, lam = np.zeros(N_total), np.zeros(N_total), np.zeros(N_tot
 var_minus, var_plus, meas_intensity = np.zeros(N_total), np.zeros(N_total), np.zeros(N_total)
 
 x[0], mu_plus[0], var_plus[0] = x0, 0, Sigma_max
-lam[0] = K[N_total] * mu_plus[0] + v[N_total]
+lam[0] = K_seq[N_total] * mu_plus[0] + (1 - K_seq[N_total]) * lam_f
 
 work_step = np.zeros(N_total)
 
@@ -145,7 +152,7 @@ for t in range(1, N_total):
     else:
         var_plus[t], mu_plus[t], meas_intensity[t] = var_minus[t], mu_minus[t], 0.0
         
-    lam[t] = K[n_rem] * mu_plus[t] + v[n_rem]
+    lam[t] = K_seq[n_rem] * mu_plus[t] + (1 - K_seq[n_rem]) * lam_f
     
     work_step[t] = 0.5 * kappa * (x[t] - lam[t])**2 - 0.5 * kappa * (x[t] - lam[t-1])**2
 
@@ -183,13 +190,11 @@ divider = make_axes_locatable(ax1)
 cax = divider.append_axes("right", size="3%", pad=0.05) 
 cbar = plt.colorbar(lc, cax=cax)
 
-# Force scientific notation to eliminate long decimal strings
 formatter = ticker.ScalarFormatter(useMathText=True)
 formatter.set_powerlimits((-2, 2)) 
 cbar.ax.yaxis.set_major_formatter(formatter)
 
-# Center the scientific notation multiplier over the colorbar
-plt.draw() # Force drawing to establish text offset bounds
+plt.draw() 
 offset_text = cbar.ax.yaxis.get_offset_text()
 offset_text.set_horizontalalignment('center')
 offset_text.set_x(4.0)
